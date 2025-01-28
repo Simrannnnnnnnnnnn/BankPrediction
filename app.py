@@ -8,7 +8,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 st.title("Bank Churn Prediction Analysis")
-st.write("Explore the dataset and visualize correlations interactively!")
+st.write("Explore the dataset, visualize correlations and, predict customer churn interactively!")
 
 # Caching dataset
 @st.cache_data
@@ -59,15 +59,55 @@ if selected_income != "All":
     df = df[df['Income_Category'] == selected_income]
 
 # Heatmap
-st.subheader("Correlation Heatmap")
-selected_columns = st.multiselect("Select Columns for Correlation Matrix", options=df.select_dtypes('number').columns)
-if selected_columns:
-    corr_matrix = df[selected_columns].corr()
-    sns.heatmap(corr_matrix, annot=True, cmap="coolwarm")
-    st.pyplot()
-    plt.close()
+st.sidebar.title("Visualizations")
+visualization_options =["Correlation Heatmap", "Distribution Plots","Box plots","Scatter Plots"]
+selected_visualization = st.sidebar.radio("Choose a visualization", visualization_options)
 
-# Model Training Section
+if selected_visualization =="Correlation Heatmap":
+    st.subheader("Correaltion Heatmap")
+    selected_columns = st.multiselect("Select Columns for correlation Matrix", options = df.select_dtypes('number').columns)
+    if selected_columns:
+        corr_matrix = df[selected_columns].corr()
+        fig, ax = plt.subplots(figsize=(10,8))
+        sns.heatmap(corr_matrix, annot = True, cmap="coolwarm", ax=ax)
+        st.pyplot(fig)
+        plt.close()
+elif selected_visualization == "Distribution Plots":
+    st.subheader("Distribution Plots")
+    numeric_columns = df.select_dtypes('number').columns
+    selected_dist_column = st.selectbox("Select column for Distribution Plot", options = numeric_columns)
+    if selected_dist_column:
+        fig,ax = plt.subplots(figsize = (8,6))
+        sns.histplot(df[selected_dist_column],kde = True, color = "blue", ax=ax)
+        ax.set_title(f"Distribution of {selected_dist_column}")
+        st.pyplot(fig)
+        plt.close()
+elif selected_visualization == "Box Plots":
+    st.subheader("Box Plots")
+    numeric_columns = df.select_dtypes('number').columns
+    categorical_columns = df.select_dtypes('object').columns
+    selected_box_column = st.selectbox("Select Numeric Column for Box Plot", options=numeric_columns)
+    selected_cat_column = st.selectbox("Select Categorical Column for Box Plot", options=categorical_columns)
+    if selected_box_column and selected_cat_column:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.boxplot(x=selected_cat_column, y=selected_box_column, data=df, ax=ax)
+        ax.set_title(f"Box Plot of {selected_box_column} by {selected_cat_column}")
+        st.pyplot(fig)
+        plt.close()
+
+elif selected_visualization == "Scatter Plots":
+    st.subheader("Scatter Plots")
+    numeric_columns = df.select_dtypes('number').columns
+    x_axis = st.selectbox("Select X-axis", numeric_columns)
+    y_axis = st.selectbox("Select Y-axis", numeric_columns)
+    if x_axis and y_axis:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.scatterplot(x=x_axis, y=y_axis, data=df, hue="Attrition_Flag", palette="cool", ax=ax)
+        ax.set_title(f"Scatter Plot: {x_axis} vs {y_axis}")
+        st.pyplot(fig)
+        plt.close()
+# Model Training Secti
+st.subheader("Train the Model")
 if st.button("Train Model"):
     df, encoders = preprocess_data(df, is_train=True)
     X = df.drop(columns=["Attrition_Flag"])
