@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-df = pd.read_csv("C:/Users/kaurs/Downloads/Internship/4. Bank Churn Prediction Analysis/BankChurners.csv")
+df = pd.read_csv("BankChurners.csv")
 from sklearn.preprocessing import LabelEncoder
 label_encoder = LabelEncoder()
 df['Attrition_Flag'] = label_encoder.fit_transform(df['Attrition_Flag'])
