@@ -2,4 +2,4 @@ streamlit
 pandas 
 scikit-learn
 seaborn 
-matplotlibe
+matplotlib
