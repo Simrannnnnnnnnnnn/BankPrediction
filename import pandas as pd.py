@@ -10,7 +10,7 @@ df['Education_Level'] = label_encoder.fit_transform(df['Education_Level'])
 df['Marital_Status'] = label_encoder.fit_transform(df['Marital_Status'])
 df['Income_Category'] = label_encoder.fit_transform(df['Income_Category'])
 df['Card_Category'] = label_encoder.fit_transform(df['Card_Category'])
-
+ 
 
 corr = df.corr()
 
