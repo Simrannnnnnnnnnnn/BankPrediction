@@ -25,7 +25,7 @@ def preprocess_data(df, is_train=True):
 
 # Load data
 def load_data():
-    return pd.read_csv("C:/Users/kaurs/Downloads/Internship/4. Bank Churn Prediction Analysis/BankChurners.csv")
+    return pd.read_csv("BankChurners.csv")
 
 # Train model
 def train_model(X_train, y_train):
