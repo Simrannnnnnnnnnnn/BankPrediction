@@ -70,7 +70,7 @@ st.sidebar.title("Customize Your Analysis")
 selected_gender = st.sidebar.selectbox("Gender", options=["All"] + df['Gender'].unique().tolist())
 selected_income = st.sidebar.selectbox("Income Category", options=["All"] + df['Income_Category'].unique().tolist())
 
-elif page == "Visualization":
+if page == "Visualization":
     st.title("Data Visualization")
     st.write("""
     Select a visualization type from the sidebar to explore a realtionship and patterns in the dataset
