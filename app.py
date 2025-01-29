@@ -26,10 +26,9 @@ def preprocess_data(df, is_train=True, encoders=None):
     df.drop(columns=[col for col in columns_to_drop if col in df.columns], inplace=True)
     
     # Encode target variable explicitly
-    df['Attrition_Flag'] = df['Attrition_Flag'].map({'Attrited Customer': 1, 'Existing Customer': 0})
-    
-    # Encode categorical columns
-    categorical_columns = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
+    if 'Attrition_Flag' in df.columns:
+        df['Attrition_Flag'] = df['Attrition_Flag'].map({'Attrited Customer': 1, 'Existing Customer': 0})    
+        categorical_columns = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
     
     if encoders is None:
         encoders = {col: LabelEncoder().fit(df[col]) for col in categorical_columns}
@@ -37,7 +36,8 @@ def preprocess_data(df, is_train=True, encoders=None):
     for column in categorical_columns:
         if column in df.columns:
             df[column] = encoders[column].transform(df[column])
-    
+    if not is_train and 'Attrition_Flag' in df.columns:
+        df.drop(columns=['Attrition_Flag'], inplace = True)
     return df, encoders
 
 # Model training function
