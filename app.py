@@ -142,6 +142,7 @@ if page == "Explore Dataset":
     st.write(df.isnull().sum())
 
 # Predict Churn Page
+# Predict Churn Page
 if page == "Predict Churn":
     st.title("Predict Customer Churn")
     st.write("Use the trained model to predict whether a customer will churn or not.")
@@ -149,17 +150,40 @@ if page == "Predict Churn":
     if "model" not in st.session_state:
         st.warning("Please train the model first from the Home page.")
     else:
-        input_data = {col: st.text_input(col, "") for col in st.session_state['features']}
+        input_data = {}
+
+        # Separate categorical and numerical columns
+        categorical_columns = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
+        numeric_columns = df.select_dtypes('number').columns.tolist()
+        numeric_columns.remove("Attrition_Flag")  # Remove target column
+
+        # Get unique values for categorical columns from the dataset
+        for col in categorical_columns:
+            options = df[col].unique().tolist()
+            input_data[col] = st.radio(f"Select {col}", options)
+
+        # Get sliders for numeric columns
+        for col in numeric_columns:
+            min_val = float(df[col].min())
+            max_val = float(df[col].max())
+            avg_val = float(df[col].median())  # Default to median value
+            input_data[col] = st.slider(f"Select {col}", min_val, max_val, avg_val)
+
+        # Convert input data into a DataFrame
         input_df = pd.DataFrame([input_data])
 
         if st.button("Predict"):
             try:
-                for col in st.session_state['features']:
-                    if col in df.select_dtypes('number').columns:
-                        input_df[col] = float(input_df[col])
+                # Encode categorical values using stored encoders
+                for col in categorical_columns:
+                    encoder = st.session_state['encoders'][col]
+                    input_df[col] = encoder.transform([input_df[col][0]])
 
-                input_df, _ = preprocess_data(input_df, is_train=False, encoders=st.session_state['encoders'])
+                # Ensure numeric values are correctly formatted
+                input_df = input_df.astype(float)
+
+                # Predict churn
                 prediction = st.session_state['model'].predict(input_df)[0]
-                st.write(f"The customer is predicted to be: {'Churn' if prediction == 1 else 'Not Churn'}")
+                st.write(f"### The customer is predicted to be: **{'Churn' if prediction == 1 else 'Not Churn'}**")
             except Exception as e:
                 st.error(f"Error during prediction: {e}")
