@@ -27,7 +27,9 @@ def preprocess_data(df, is_train=True, encoders=None):
         df.drop(columns=columns_to_drop, inplace=True)
 
     #label_encoder = LabelEncoder()
-    categorical_columns = ['Attrition_Flag', 'Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
+    df['Attrition_Flag'] = df['Attrition_Flag'].map({'Attrited Customer' : 1, 'Existing Customer':0})
+    
+    categorical_columns = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
 
     if encoders is None:
         encoders = {col: LabelEncoder().fit(df[col]) for col in categorical_columns}
