@@ -11,7 +11,7 @@ st.set_page_config(page_title = "Bank Churn Prediction", layout ="wide")
 
 @st.cache_data(ttl = 3600)
 #st.title("Bank Churn Prediction Analysis")
-st.write("Explore the dataset, visualize correlations and, predict customer churn interactively!")
+#st.write("Explore the dataset, visualize correlations and, predict customer churn interactively!")
 
 # Caching dataset
 #@st.cache_data
