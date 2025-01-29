@@ -26,7 +26,7 @@ def preprocess_data(df, is_train=True, encoders=None):
     if is_train:
         df.drop(columns=columns_to_drop, inplace=True)
 
-    label_encoder = LabelEncoder()
+    #label_encoder = LabelEncoder()
     categorical_columns = ['Attrition_Flag', 'Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
 
     if encoders is None:
@@ -46,6 +46,7 @@ def train_model(X_train, y_train):
 
 # Load data
 df = load_data()
+st.write(df.head())
 
 # Sidebar options for filtering
 st.sidebar.title("Customize Your Analysis")
@@ -57,7 +58,7 @@ if selected_gender != "All":
 
 if selected_income != "All":
     df = df[df['Income_Category'] == selected_income]
-
+st.write(df.shape)
 # Heatmap
 st.sidebar.title("Visualizations")
 visualization_options =["Correlation Heatmap", "Distribution Plots","Box plots","Scatter Plots"]
@@ -75,10 +76,10 @@ if selected_visualization =="Correlation Heatmap":
 elif selected_visualization == "Distribution Plots":
     st.subheader("Distribution Plots")
     numeric_columns = df.select_dtypes('number').columns
-    selected_dist_column = st.selectbox("Select column for Distribution Plot", options = numeric_columns)
+    selected_dist_column = st.sidebar.selectbox("Select column for Distribution Plot", options = numeric_columns)
     if selected_dist_column:
         fig,ax = plt.subplots(figsize = (8,6))
-        sns.histplot(df[selected_dist_column],kde = True, color = "blue", ax=ax)
+        sns.histplot(df[selected_dist_column], kde = True, color = "blue", ax=ax)
         ax.set_title(f"Distribution of {selected_dist_column}")
         st.pyplot(fig)
         plt.close()
@@ -98,8 +99,8 @@ elif selected_visualization == "Box Plots":
 elif selected_visualization == "Scatter Plots":
     st.subheader("Scatter Plots")
     numeric_columns = df.select_dtypes('number').columns
-    x_axis = st.selectbox("Select X-axis", numeric_columns)
-    y_axis = st.selectbox("Select Y-axis", numeric_columns)
+    x_axis = st.sidebar.selectbox("Select X-axis", numeric_columns)
+    y_axis = st.sidebar.selectbox("Select Y-axis", numeric_columns)
     if x_axis and y_axis:
         fig, ax = plt.subplots(figsize=(8, 6))
         sns.scatterplot(x=x_axis, y=y_axis, data=df, hue="Attrition_Flag", palette="cool", ax=ax)
