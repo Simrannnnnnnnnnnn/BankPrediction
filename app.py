@@ -10,17 +10,25 @@ import matplotlib.pyplot as plt
 # Streamlit Page Config
 st.set_page_config(page_title="Bank Churn Prediction", layout="wide")
 
-@st.cache_data(ttl=3600)
+# Caching dataset
+@st.cache_data(ttl=3600)  # Cache for 1 hour
 def load_data():
     df = pd.read_csv("BankChurners.csv")
     return df
 
+# Preprocessing function
 def preprocess_data(df, is_train=True, encoders=None):
-    columns_to_drop = ['Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1',
-                       'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2',
-                       'CLIENTNUM']
+    columns_to_drop = [
+        'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_1',
+        'Naive_Bayes_Classifier_Attrition_Flag_Card_Category_Contacts_Count_12_mon_Dependent_count_Education_Level_Months_Inactive_12_mon_2',
+        'CLIENTNUM'
+    ]
     df.drop(columns=[col for col in columns_to_drop if col in df.columns], inplace=True)
+    
+    # Encode target variable explicitly
     df['Attrition_Flag'] = df['Attrition_Flag'].map({'Attrited Customer': 1, 'Existing Customer': 0})
+    
+    # Encode categorical columns
     categorical_columns = ['Gender', 'Education_Level', 'Marital_Status', 'Income_Category', 'Card_Category']
     
     if encoders is None:
@@ -32,21 +40,27 @@ def preprocess_data(df, is_train=True, encoders=None):
     
     return df, encoders
 
+# Model training function
 def train_model(X_train, y_train):
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
     return model
 
+# Load data
 df = load_data()
+
+# Navigation Bar
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Home", "Visualization", "Explore Dataset", "Predict Churn"])
 
+# Home Page
 if page == "Home":
     st.title("Welcome to Bank Churn Prediction Web App")
     st.write("""
-    - **Explore the Dataset**: Understand the statistics and structure of the data.
-    - **Visualize Correlations**: Analyze relationships between variables using interactive charts.
-    - **Predict Customer Churn**: Use a Machine Learning Model to predict whether a customer will churn or not.
+    This web application allows you to:
+    - **Explore the dataset**: Understand the statistics and structure of the data.
+    - **Visualize correlations**: Analyze relationships between variables using interactive charts.
+    - **Predict customer churn**: Use a machine learning model to predict whether a customer will churn or not.
     """)
     
     st.subheader("Train the Model")
@@ -60,12 +74,106 @@ if page == "Home":
         st.session_state['model'] = model
         st.session_state['features'] = X.columns.tolist()
         st.session_state['encoders'] = encoders
+
         y_pred = model.predict(X_test)
-        
         st.write(f"Model Accuracy: {accuracy_score(y_test, y_pred):.2f}")
         st.write("Classification Report:")
         st.text(classification_report(y_test, y_pred))
 
+# Visualization Page
+elif page == "Visualization":
+    st.title("Data Visualization")
+    visualization_options = ["Correlation Heatmap", "Distribution Plots", "Box Plots", "Scatter Plots"]
+    selected_visualization = st.sidebar.selectbox("Choose a visualization", visualization_options)
+    
+    if selected_visualization == "Correlation Heatmap":
+        st.subheader("Correlation Heatmap")
+        numeric_columns = df.select_dtypes('number').columns.tolist()
+        if "Attrition_Flag" in numeric_columns:
+            numeric_columns.remove("Attrition_Flag")
+        
+        if numeric_columns:
+            corr_matrix = df[numeric_columns].corr()
+            fig, ax = plt.subplots(figsize=(10, 8))
+            sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", ax=ax)
+            st.pyplot(fig)
+            plt.close()
+        else:
+            st.write("No numeric columns available for correlation matrix.")
+
+    elif selected_visualization == "Distribution Plots":
+        st.subheader("Distribution Plots")
+        st.write("""
+        A distribution plot shows the distribution of a numeric variable. 
+        It helps you understand the spread, skewness, and outliers in the data.
+        """)
+        
+        # Select numeric column for distribution plot
+        numeric_columns = df.select_dtypes('number').columns.tolist()
+        selected_column = st.selectbox("Select a numeric column for distribution plot", numeric_columns)
+        
+        if selected_column:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            sns.histplot(df[selected_column], kde=True, color="blue", ax=ax)
+            ax.set_title(f"Distribution of {selected_column}")
+            st.pyplot(fig)
+            plt.close()
+
+    elif selected_visualization == "Box Plots":
+        st.subheader("Box Plots")
+        st.write("""
+        A box plot shows the distribution of a numeric variable across different categories. 
+        It helps you compare the spread and identify outliers.
+        """)
+        
+        # Select numeric and categorical columns for box plot
+        numeric_columns = df.select_dtypes('number').columns.tolist()
+        categorical_columns = df.select_dtypes('object').columns.tolist()
+        
+        selected_numeric = st.selectbox("Select a numeric column for box plot", numeric_columns)
+        selected_categorical = st.selectbox("Select a categorical column for box plot", categorical_columns)
+        
+        if selected_numeric and selected_categorical:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            sns.boxplot(x=selected_categorical, y=selected_numeric, data=df, ax=ax)
+            ax.set_title(f"Box Plot of {selected_numeric} by {selected_categorical}")
+            st.pyplot(fig)
+            plt.close()
+
+    elif selected_visualization == "Scatter Plots":
+        st.subheader("Scatter Plots")
+        st.write("""
+        A scatter plot shows the relationship between two numeric variables. 
+        It helps you identify patterns, trends, and outliers.
+        """)
+        
+        # Select numeric columns for scatter plot
+        numeric_columns = df.select_dtypes('number').columns.tolist()
+        x_axis = st.selectbox("Select X-axis", numeric_columns)
+        y_axis = st.selectbox("Select Y-axis", numeric_columns)
+        
+        if x_axis and y_axis:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            sns.scatterplot(x=x_axis, y=y_axis, data=df, hue="Attrition_Flag", palette="cool", ax=ax)
+            ax.set_title(f"Scatter Plot: {x_axis} vs {y_axis}")
+            st.pyplot(fig)
+            plt.close()
+
+# Explore Dataset Page
+elif page == "Explore Dataset":
+    st.title("Explore Dataset")
+    st.write("Here, you can explore the dataset and view its statistics.")
+    
+    st.subheader("Dataset Overview")
+    st.write(df.head())
+    
+    st.subheader("Dataset Statistics")
+    st.write(df.describe())
+    
+    st.subheader("Missing Values")
+    st.write(df.isnull().sum())
+
+# Predict Churn Page
 elif page == "Predict Churn":
     st.title("Predict Customer Churn")
     
@@ -105,33 +213,3 @@ elif page == "Predict Churn":
                     st.write(f"The customer is predicted to be: {'Churn' if prediction == 1 else 'Not Churn'}")
             except Exception as e:
                 st.error(f"Error during prediction: {e}")
-
-elif page == "Visualization":
-    st.title("Data Visualization")
-    visualization_options = ["Correlation Heatmap", "Distribution Plots", "Box Plots", "Scatter Plots"]
-    selected_visualization = st.sidebar.selectbox("Choose a visualization", visualization_options)
-    
-    if selected_visualization == "Correlation Heatmap":
-        st.subheader("Correlation Heatmap")
-        numeric_columns = df.select_dtypes('number').columns.tolist()
-        if "Attrition_Flag" in numeric_columns:
-            numeric_columns.remove("Attrition_Flag")
-        
-        if numeric_columns:
-            corr_matrix = df[numeric_columns].corr()
-            fig, ax = plt.subplots(figsize=(10, 8))
-            sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", ax=ax)
-            st.pyplot(fig)
-            plt.close()
-        else:
-            st.write("No numeric columns available for correlation matrix.")
-
-elif page == "Explore Dataset":
-    st.title("Explore Dataset")
-    st.write(""" Here, you can explore the dataset and view its statistics. """)
-    st.subheader("Dataset Overview")
-    st.write(df.head())
-    st.subheader("Dataset Statistics")
-    st.write(df.describe())
-    st.subheader("Missing Values")
-    st.write(df.isnull().sum())
